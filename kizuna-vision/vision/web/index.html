@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AGRIWISE · Analyseur photo</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 1C5 6 3 8.5 3 11a5 5 0 0 0 10 0c0-2.5-2-5-5-10z' fill='%231e50a2'/%3E%3C/svg%3E">
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap");
+:root {
+  --ink: #1f2340; --ink-soft: #5a5f7a; --ground: #eef5f3; --surface: #fff; --line: #dbe3e7;
+  --kon: #223a70; --kon-2: #2c4c8c; --water: #1e50a2; --water-pale: #dce8f7; --sky: #7cc7e8; --sky-pale: #e3f4fb;
+  --leaf: #2a9d64; --leaf-pale: #dcf1e4; --moegi-pale: #f0f7dc; --yamabuki: #f8b500; --ochre-pale: #fff1c9;
+  --alarm: #d7003a; --alarm-pale: #fbe1e7; --shu: #eb6101; --sakura: #e8879f; --sakura-pale: #fdeef2; --ayame: #b5579b;
+  --idle: #9aa1b5; --r: 16px;
+  --font: "Zen Kaku Gothic New", "Hiragino Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-head: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", Georgia, serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ground); color: var(--ink); font: 16px/1.5 var(--font); font-variant-numeric: tabular-nums; }
+h1, h2, h3, p { margin: 0; }
+h2 { font-family: var(--font-head); font-weight: 800; font-size: 1.15rem; letter-spacing: .02em; }
+a { color: var(--water); }
+:focus-visible { outline: 3px solid var(--water); outline-offset: 2px; }
+button, input, select { font: inherit; color: inherit; }
+
+/* header: indigo with 青海波 waves and the 絆 seal, as on the dashboard */
+.topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; padding: 12px 22px; color: #eef2fb;
+  background-color: var(--kon); border-bottom: 4px solid var(--shu);
+  background-image:
+    radial-gradient(circle at 100% 150%, var(--kon) 24%, var(--kon-2) 24%, var(--kon-2) 28%, var(--kon) 28%, var(--kon) 36%, var(--kon-2) 36%, var(--kon-2) 40%, transparent 40%, transparent),
+    radial-gradient(circle at 0 150%, var(--kon) 24%, var(--kon-2) 24%, var(--kon-2) 28%, var(--kon) 28%, var(--kon) 36%, var(--kon-2) 36%, var(--kon-2) 40%, transparent 40%, transparent),
+    radial-gradient(circle at 50% 100%, var(--kon-2) 10%, var(--kon) 10%, var(--kon) 23%, var(--kon-2) 23%, var(--kon-2) 30%, var(--kon) 30%, var(--kon) 43%, var(--kon-2) 43%, var(--kon-2) 50%, var(--kon) 50%, var(--kon) 63%, var(--kon-2) 63%, var(--kon-2) 71%, transparent 71%, transparent),
+    radial-gradient(circle at 100% 50%, var(--kon-2) 5%, var(--kon) 5%, var(--kon) 15%, var(--kon-2) 15%, var(--kon-2) 20%, var(--kon) 20%, var(--kon) 29%, var(--kon-2) 29%, var(--kon-2) 34%, var(--kon) 34%, var(--kon) 44%, var(--kon-2) 44%, var(--kon-2) 49%, transparent 49%, transparent),
+    radial-gradient(circle at 0 50%, var(--kon-2) 5%, var(--kon) 5%, var(--kon) 15%, var(--kon-2) 15%, var(--kon-2) 20%, var(--kon) 20%, var(--kon) 29%, var(--kon-2) 29%, var(--kon-2) 34%, var(--kon) 34%, var(--kon) 44%, var(--kon-2) 44%, var(--kon-2) 49%, transparent 49%, transparent);
+  background-size: 64px 32px; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-head); font-weight: 800; font-size: 1.35rem; letter-spacing: .04em; }
+.brand small { font-family: var(--font); font-weight: 500; font-size: .8rem; opacity: .85; letter-spacing: .06em; }
+.hanko { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 6px; background: var(--shu); color: #fff;
+  font-family: var(--font-head); font-size: 1.2rem; font-weight: 800; transform: rotate(-6deg); box-shadow: 0 0 0 2px rgba(255,255,255,.25); }
+.nav { display: flex; gap: 4px; margin-left: auto; }
+.nav a { color: #eef2fb; text-decoration: none; padding: 6px 14px; border-radius: 999px; }
+.nav a[aria-current="page"] { background: #fff; color: var(--kon); font-weight: 700; }
+.nav a:not([aria-current]):hover { background: rgba(255,255,255,.12); }
+
+main { max-width: 1100px; margin: 0 auto; padding: 16px 16px 40px; display: grid; gap: 14px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px;
+  box-shadow: 0 1px 0 rgba(31,35,64,.04), 0 8px 24px -18px rgba(34,58,112,.35); }
+.head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 12px; margin-bottom: 10px; }
+.muted { color: var(--ink-soft); } .small { font-size: .88rem; }
+
+/* modules of the analyzer */
+.mods { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+.mod { display: grid; grid-template-columns: 30px 1fr; gap: 2px 10px; align-items: center; padding: 10px; border-radius: 12px; border: 2px solid var(--line); background: #f8fafc; }
+.mod svg { grid-row: span 2; width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.mod b { font-size: .95rem; }
+.mod span { font-size: .78rem; color: var(--ink-soft); }
+.mod.on { border-color: var(--leaf); background: var(--leaf-pale); } .mod.on svg { color: var(--leaf); }
+.mod.ai { border-color: var(--ayame); background: #f8eef5; } .mod.ai svg { color: var(--ayame); }
+.mod.off { border-style: dashed; color: var(--ink-soft); } .mod.off svg { color: var(--idle); }
+.mod.err { border-color: var(--alarm); background: var(--alarm-pale); } .mod.err svg { color: var(--alarm); }
+
+/* the form */
+.form { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 12px; align-items: end; }
+.form label { display: grid; gap: 4px; font-weight: 700; font-size: .9rem; }
+.form input, .form select { min-height: 46px; padding: 8px 10px; border: 1px solid #a7b0c4; border-radius: 10px; background: #fff; }
+.drop { grid-column: 1 / -1; display: grid; place-items: center; gap: 4px; min-height: 120px; border: 2px dashed var(--sakura); border-radius: 14px;
+  background: var(--sakura-pale); cursor: pointer; text-align: center; padding: 14px; color: var(--ink); }
+.drop.has { border-style: solid; }
+.drop.over, body.dragging .drop { background: #fbe2ea; border-color: var(--shu); border-style: solid; }
+.drop #thumb { max-height: 110px; max-width: 100%; border-radius: 10px; box-shadow: 0 4px 12px -6px rgba(31,35,64,.5); }
+.drop .err { color: var(--alarm); font-weight: 700; }
+.drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.drop strong { font-family: var(--font-head); font-size: 1.1rem; overflow-wrap: anywhere; max-width: 100%; }
+.form label { min-width: 0; }
+.form input, .form select { width: 100%; min-width: 0; }
+main, .panel, .result > * { min-width: 0; }
+.btn { min-height: 46px; border: 0; border-radius: 10px; background: var(--kon); color: #fff; font-weight: 700; padding: 0 22px; cursor: pointer; }
+.btn:disabled { opacity: .55; cursor: wait; }
+
+/* result */
+.result { display: grid; grid-template-columns: minmax(260px, 5fr) 7fr; gap: 14px; align-items: start; }
+.photo { aspect-ratio: 4 / 3; border-radius: var(--r); overflow: hidden; background: var(--sakura-pale); display: grid; place-items: center; color: var(--ink-soft); }
+.photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+ol.steps { list-style: none; margin: 0; padding: 0; counter-reset: s; }
+ol.steps li { counter-increment: s; display: grid; grid-template-columns: 40px 1fr; gap: 2px 12px; padding: 10px 0; border-bottom: 1px solid var(--line); position: relative; }
+ol.steps li::before { content: counter(s); grid-row: span 2; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700;
+  border: 3px solid var(--idle); color: var(--ink-soft); background: #fff; }
+ol.steps li:not(:last-child)::after { content: ""; position: absolute; left: 16px; top: 46px; bottom: -10px; width: 3px; background: var(--line); }
+ol.steps li[data-s="ok"]::before { border-color: var(--leaf); color: var(--leaf); }
+ol.steps li[data-s="warn"]::before { border-color: var(--yamabuki); color: #a26f00; }
+ol.steps li[data-s="error"]::before { border-color: var(--alarm); color: var(--alarm); }
+ol.steps li[data-s="wait"]::before { border-color: var(--water); color: var(--water); animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 6px var(--water-pale); } }
+.st-h { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.st-v { font-weight: 700; }
+.st-d { color: var(--ink-soft); font-size: .9rem; }
+.kind { font-size: .72rem; padding: 0 6px; border-radius: 4px; border: 1px solid; }
+.k-ai { color: var(--ayame); border-color: var(--ayame); border-style: dashed; }
+.k-cv { color: var(--leaf); border-color: var(--leaf); }
+.k-calc { color: var(--water); border-color: var(--water); }
+.zone-card { margin-top: 12px; padding: 12px 14px; border-radius: 14px; background: linear-gradient(100deg, var(--water-pale), #eef4fc); }
+.zone-card h3 { font-family: var(--font-head); font-size: 1.05rem; margin-bottom: 6px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.facts b { display: block; } .facts span { font-size: .82rem; color: var(--ink-soft); }
+.notes { margin: 8px 0 0; padding-left: 18px; font-size: .9rem; }
+.alert { margin-top: 8px; padding: 8px 12px; border-left: 5px solid var(--yamabuki); background: var(--ochre-pale); border-radius: 0 10px 10px 0; font-size: .92rem; }
+.alert.bad { border-color: var(--alarm); background: var(--alarm-pale); }
+.empty { padding: 16px; border: 2px dashed var(--line); border-radius: 14px; color: var(--ink-soft); }
+@media (prefers-reduced-motion: reduce) { ol.steps li[data-s="wait"]::before { animation: none; } }
+@media (max-width: 760px) {
+  .topbar { padding: 10px 14px; }
+  .brand small { display: none; }
+  .nav { margin-left: 0; width: 100%; }
+  main { padding: 10px 10px 32px; }
+  .form { grid-template-columns: 1fr 1fr; }
+  .form .btn { grid-column: 1 / -1; }
+  .result { grid-template-columns: 1fr; }
+  .mods { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .mod { grid-template-columns: 24px 1fr; padding: 8px; gap: 0 8px; }
+  .mod svg { width: 24px; height: 24px; }
+  .mod b { font-size: .85rem; }
+  .what { display: none; }
+}
+.what { font-style: normal; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="hanko" aria-hidden="true">絆</span>AGRIWISE<small>Analyseur photo</small></div>
+  <nav class="nav" aria-label="Pages">
+    <a id="dash-link" href="#">Tableau de bord</a>
+    <a href="./" aria-current="page">Analyseur</a>
+  </nav>
+</header>
+
+<main>
+  <section class="panel" aria-labelledby="mod-h">
+    <div class="head"><h2 id="mod-h">Ce que l'analyseur sait faire</h2><p class="muted small" id="mod-sub">Vérification…</p></div>
+    <div class="mods" id="mods"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="form-h">
+    <div class="head"><h2 id="form-h">Analyser une photo</h2>
+      <p class="muted small">Les caméras envoient leurs images seules ; ici, on teste avec n'importe quelle photo.</p></div>
+    <form class="form" id="f">
+      <label class="drop" id="drop" for="img">
+        <input id="img" name="image" type="file" accept="image/*" capture="environment">
+        <img id="thumb" alt="" hidden>
+        <strong id="drop-t">Prendre ou choisir une photo</strong>
+        <span class="muted small" id="drop-s">ou la glisser-déposer ici (n'importe où sur la page)</span>
+      </label>
+      <label>Parcelle<select id="zone" name="zone_id"><option value="">—</option></select></label>
+      <label>Plante (facultatif)<input id="plant" name="plant_ref" placeholder="ex. Z2-P01"></label>
+      <label>Type de photo<select id="src" name="source"><option value="phone">Plante</option><option value="mast">Caméra fixe</option><option value="trap">Piège jaune</option></select></label>
+      <button class="btn" id="go">Analyser</button>
+    </form>
+  </section>
+
+  <section class="panel" aria-labelledby="res-h" id="res" hidden>
+    <div class="head"><h2 id="res-h">Résultat</h2><p class="muted small" id="res-meta"></p></div>
+    <div class="result">
+      <div class="photo" id="photo"></div>
+      <div><ol class="steps" id="steps"></ol><div id="zonecard"></div></div>
+    </div>
+  </section>
+</main>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const E = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const host = port => `${location.protocol}//${location.hostname}:${port}`;
+const BACKEND = host(8000), DASHBOARD = host(3000);
+$("dash-link").href = DASHBOARD;
+const pct = v => v == null ? "" : Math.round(v * 100) + " %";
+const CROP = { tomato: "Tomate", pepper: "Poivron", potato: "Pomme de terre", eggplant: "Aubergine", other: "Autre plante", unknown: "Incertaine" };
+const VIS = { seedling: "jeune plant", leafy_no_flowers: "feuillage, sans fleurs", flowers: "en fleurs", green_fruits: "fruits verts",
+  coloured_fruits: "fruits colorés", emergence: "levée", leafy_canopy: "feuillage couvrant", flowering: "floraison", senescence: "sénescence" };
+const ICON = {
+  crop: '<path d="M12 21v-8"/><path d="M12 13c0-4 3-7 8-7 0 4-3 7-8 7zM12 15c0-3.5-2.5-6-7-6 0 3.5 2.5 6 7 6z"/>',
+  health: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/><path d="M8 12h2.5l1-2 2 4 1-2H16"/>',
+  pests: '<ellipse cx="12" cy="13" rx="4" ry="5.5"/><path d="M12 7.5V5M9 4l1.5 2M15 4l-1.5 2M8 11H4M8 15H4.5M16 11h4M16 15h3.5"/>',
+  animals: '<path d="M5 15c0-3 2.5-5 5-5h4c2.5 0 5 2 5 5v2H5z"/><circle cx="8" cy="7" r="1.6"/><circle cx="16" cy="7" r="1.6"/>',
+  weather: '<path d="M7 17h10a3.5 3.5 0 0 0 0-7 5 5 0 0 0-9.3 1.2A2.9 2.9 0 0 0 7 17z"/><path d="M9 20l-1 2M13 20l-1 2M17 20l-1 2"/>',
+  canopy: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 15l5-5 4 4 3-3 6 6"/>',
+  trap: '<rect x="6" y="3" width="12" height="18" rx="1.5"/><circle cx="10" cy="9" r="1"/><circle cx="14" cy="12" r="1"/><circle cx="10" cy="15" r="1"/>',
+  motion: '<path d="M3 12h4l2-5 4 10 2-5h6"/>',
+};
+const MODS = [
+  ["crop", "Culture et stade", "Identifie tomate, poivron, pomme de terre, aubergine et le stade visible"],
+  ["health", "Santé des feuilles", "Indice : à inspecter ou non (jamais un diagnostic)"],
+  ["pests", "Ravageurs", "Détecteur entraîné sur photos annotées"],
+  ["animals", "Animaux", "Oiseaux, chiens, moutons… dans la parcelle"],
+  ["weather", "Pluie", "Pluie visible sur l'image (le capteur reste prioritaire)"],
+  ["canopy", "Couverture foliaire", "Part de feuillage vert sur l'image"],
+  ["trap", "Piège jaune", "Comptage des insectes collés"],
+  ["motion", "Mouvement", "Changement entre deux images"],
+];
+
+async function loadModules() {
+  try {
+    const h = await fetch("health").then(r => r.json());
+    const en = h.engines || {}, un = en.unavailable || {};
+    $("mods").innerHTML = MODS.map(([k, name, what]) => {
+      const engine = en[k];
+      let cls = "off", kind = "non installé";
+      if (un[k]) { cls = "err"; kind = "erreur : " + un[k]; }
+      else if (engine === "classic CV") { cls = "on"; kind = "vision classique (mesure)"; }
+      else if (engine && /zero-shot/i.test(engine)) { cls = "ai"; kind = "IA générale, non entraînée"; }
+      else if (engine) { cls = "on"; kind = "modèle entraîné"; }
+      return `<div class="mod ${cls}" title="${E(engine || "")}"><svg viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>
+        <b>${E(name)}</b><span>${E(kind)}<em class="what"> — ${E(what)}</em></span></div>`;
+    }).join("");
+    $("mod-sub").textContent = h.backend_url ? `Résultats envoyés au backend : ${h.backend_url}` : "";
+  } catch (e) { $("mod-sub").textContent = "Impossible de lire l'état des modules."; }
+}
+
+async function loadZones() {
+  try {
+    const zones = await fetch(BACKEND + "/api/zones").then(r => r.json());
+    $("zone").innerHTML = `<option value="">— sans parcelle —</option>` + zones.map(z => `<option value="${z.id}">${E(z.name)}</option>`).join("");
+    let last = null; try { last = localStorage.getItem("aw-vision-zone"); } catch (e) { /* storage blocked */ }
+    if (last && zones.find(z => String(z.id) === last)) $("zone").value = last;
+  } catch (e) {
+    $("zone").outerHTML = `<input id="zone" name="zone_id" type="number" min="1" placeholder="n° de zone">`;
+  }
+}
+
+// photo picker: tap to choose, or drag-and-drop anywhere on the page.
+// The chosen photo is kept in `picked`, so sending does not depend on the hidden file field.
+const drop = $("drop"), input = $("img");
+let picked = null, dragDepth = 0;
+
+function pick(file) {
+  if (!file) return;
+  if (file.type && !file.type.startsWith("image/")) { dropMsg("Ce fichier n'est pas une image.", true); return; }
+  picked = file;
+  try { const dt = new DataTransfer(); dt.items.add(file); input.files = dt.files; } catch (e) { /* older browser: `picked` is enough */ }
+  drop.classList.add("has");
+  const th = $("thumb");
+  th.src = URL.createObjectURL(file); th.hidden = false;
+  $("drop-t").textContent = file.name || "photo";
+  $("drop-s").textContent = "Photo prête : appuyer sur Analyser (ou en choisir une autre)";
+}
+function dropMsg(text, bad) { $("drop-s").innerHTML = bad ? `<span class="err">${E(text)}</span>` : E(text); }
+
+input.addEventListener("change", () => pick(input.files[0]));
+
+const hasFiles = e => Array.from((e.dataTransfer && e.dataTransfer.types) || []).some(t => t === "Files" || t === "text/uri-list");
+window.addEventListener("dragenter", e => { if (!hasFiles(e)) return; e.preventDefault(); dragDepth++; document.body.classList.add("dragging"); });
+window.addEventListener("dragover", e => { if (!hasFiles(e)) return; e.preventDefault(); e.dataTransfer.dropEffect = "copy"; });
+window.addEventListener("dragleave", e => { if (!hasFiles(e)) return; dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) document.body.classList.remove("dragging"); });
+window.addEventListener("drop", async e => {
+  if (!hasFiles(e)) return;
+  e.preventDefault();                         // never let the browser open the image in the tab
+  dragDepth = 0; document.body.classList.remove("dragging");
+  const files = Array.from(e.dataTransfer.files || []);
+  if (files.length) { pick(files.find(f => (f.type || "").startsWith("image/")) || files[0]); return; }
+  // an image dragged from another web page arrives as a link
+  const url = (e.dataTransfer.getData("text/uri-list") || e.dataTransfer.getData("text/plain") || "").split("\n")[0].trim();
+  if (!url) return;
+  try {
+    const blob = await fetch(url).then(r => { if (!r.ok) throw new Error(r.status); return r.blob(); });
+    pick(new File([blob], url.split("/").pop().split("?")[0] || "image.jpg", { type: blob.type || "image/jpeg" }));
+  } catch (err) {
+    dropMsg("Ce site ne laisse pas récupérer l'image : enregistrez-la puis glissez le fichier.", true);
+  }
+});
+
+const STEP_TITLES = ["Photo reçue", "Culture", "Stade visible", "Santé", "Mesures de l'image", "Envoi au backend"];
+
+function renderSteps(steps) {
+  $("steps").innerHTML = steps.map(s => `<li data-s="${s.s}">
+    <div class="st-h"><span>${E(s.t)}</span><span class="st-v">${E(s.v || "")}</span>${s.k ? `<span class="kind ${s.k[0]}">${E(s.k[1])}</span>` : ""}</div>
+    ${s.d ? `<p class="st-d">${E(s.d)}</p>` : ""}</li>`).join("");
+}
+
+$("f").onsubmit = async ev => {
+  ev.preventDefault();
+  if (!picked) { dropMsg("Choisissez ou glissez d'abord une photo.", true); return; }
+  const fd = new FormData(ev.target);
+  fd.set("image", picked, picked.name || "photo.jpg");
+  if (!fd.get("plant_ref")) fd.delete("plant_ref");
+  if (!fd.get("zone_id")) fd.delete("zone_id");
+  try { localStorage.setItem("aw-vision-zone", fd.get("zone_id") || ""); } catch (e) { /* ignore */ }
+  $("res").hidden = false;
+  $("photo").innerHTML = `<img src="${URL.createObjectURL(picked)}" alt="Photo analysée">`;
+  $("zonecard").innerHTML = "";
+  $("res-meta").textContent = "Analyse en cours…";
+  renderSteps(STEP_TITLES.map((t, i) => ({ t, s: i === 0 ? "wait" : "", v: i === 0 ? "en cours…" : "" })));
+  $("go").disabled = true;
+  const t0 = performance.now();
+  try {
+    const r = await fetch("analyze", { method: "POST", body: fd });
+    if (!r.ok) throw new Error(`${r.status} ${(await r.text()).slice(0, 160)}`);
+    const j = await r.json();
+    render(j, (performance.now() - t0) / 1000);
+  } catch (e) {
+    renderSteps([{ t: "Analyse impossible", s: "error", v: "", d: String(e.message || e) }]);
+    $("res-meta").textContent = "";
+  } finally { $("go").disabled = false; }
+};
+
+function render(j, secs) {
+  const o = j.observation || {}, B = j.backend || {};
+  const src = { phone: "Plante", mast: "Caméra fixe", trap: "Piège jaune", carriage: "Chariot" }[o.source] || o.source;
+  $("res-meta").textContent = `${src} · analysée en ${secs.toFixed(1)} s`;
+  const steps = [{ t: "Photo reçue", s: "ok", v: src, d: o.zone_id ? `Parcelle ${o.zone_id}${o.plant_ref ? ", plante " + o.plant_ref : ""}` : "Sans parcelle" }];
+  if (o.source === "trap") {
+    const tr = o.trap || {};
+    steps.push({ t: "Piège jaune", s: tr.trap_found ? "ok" : "warn", v: tr.trap_found ? `${tr.insect_count} insectes` : "piège non trouvé",
+                 k: ["k-cv", "vision classique"], d: "Comptage des taches sombres sur le jaune, sans IA." });
+  } else {
+    const c = o.crop || {};
+    if (!c.key) steps.push({ t: "Culture", s: "warn", v: "non évaluée", d: "Module culture indisponible." });
+    else if (c.key === "unknown") steps.push({ t: "Culture", s: "warn", v: "incertaine", k: ["k-ai", "IA"],
+      d: `Le modèle hésite (meilleure hypothèse : ${CROP[c.best_guess] || c.best_guess || "?"}). Diagnostic incertain — confirmer à la main.` });
+    else steps.push({ t: "Culture", s: "ok", v: `${CROP[c.key] || c.label || c.key} ${pct(c.confidence)}`, k: ["k-ai", "IA"],
+      d: "Score relatif entre les cultures possibles, pas une certitude." });
+    const st = o.stage || {};
+    steps.push(st.key ? { t: "Stade visible", s: "ok", v: `${VIS[st.key] || st.key} ${pct(st.confidence)}`, k: ["k-ai", "IA"],
+                          d: (st.visual_cues || []).length ? "Reconnu : " + st.visual_cues.join(", ") : "" }
+                      : { t: "Stade visible", s: "warn", v: "non évalué", d: "Pas de stade sans culture identifiée." });
+    const h = o.health || {}, pests = o.pests || [];
+    if (pests.length) steps.push({ t: "Santé", s: "warn", v: pests.map(p => p.label.replace(/_/g, " ")).join(", "), k: ["k-ai", "détecteur entraîné"], d: "À vérifier sur la plante." });
+    else if (h.hint) steps.push({ t: "Santé", s: h.hint === "healthy" ? "ok" : "warn", v: h.hint === "healthy" ? "rien de visible" : "à inspecter",
+                                  k: ["k-ai", "indice IA"], d: h.message_fr || "" });
+    else steps.push({ t: "Santé", s: "", v: "non évaluée" });
+  }
+  const m = [];
+  if (o.canopy && o.canopy.canopy_cover_pct != null) m.push(`feuillage ${Math.round(o.canopy.canopy_cover_pct)} %`);
+  if (o.rain && o.rain.raining_now != null) m.push(o.rain.raining_now ? "pluie visible" : "pas de pluie");
+  if ((o.animals || []).length) m.push("animal : " + o.animals.map(a => a.label).join(", "));
+  if (o.motion && o.motion.intrusion) m.push("mouvement détecté");
+  if (o.source !== "trap") steps.push({ t: "Mesures de l'image", s: "ok", v: m.join(" · ") || "—", k: ["k-cv", "vision classique"] });
+  if (B.error || !j.backend) steps.push({ t: "Envoi au backend", s: "error", v: "échec", d: B.error || "Le backend n'a pas répondu (vérifier qu'il tourne et la clé)." });
+  else steps.push({ t: "Envoi au backend", s: "ok", v: "reçu", d: "Le résultat est croisé avec les capteurs de l'ESP32 et le calendrier de la culture.", k: ["k-calc", "enregistré"] });
+  renderSteps(steps);
+
+  // what it means for the plot
+  const S = B.stage || {}, I = B.irrigation || {};
+  let card = "";
+  if (S.available) {
+    card += `<div class="facts">
+      <div><b>${E(S.stage.name_fr)}</b><span>stade retenu (certitude ${E({ confirmed: "confirmée", high: "élevée", medium: "moyenne", low: "faible" }[S.certainty.level] || S.certainty.level)})</span></div>
+      ${S.next_stage ? `<div><b>${E(S.next_stage.name_fr)}</b><span>vers le ${new Date(S.next_stage_date + "T12:00:00").toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}, dans ${S.days_to_next_stage} j</span></div>` : ""}
+      ${I.frequency ? `<div><b>${E(I.frequency.text_fr)}</b><span>irrigation estimée</span></div>
+      <div><b>${I.next_irrigation ? E(I.next_irrigation.when_fr) : "non déterminée"}</b><span>prochaine irrigation</span></div>
+      <div><b>${Math.round(I.volume_per_irrigation_l)} L · ${Math.round(I.duration_per_irrigation_min)} min</b><span>par irrigation</span></div>` : ""}
+    </div>`;
+    if ((S.reasons_fr || []).length) card += `<ul class="notes">${S.reasons_fr.map(r => `<li>${E(r)}</li>`).join("")}</ul>`;
+  }
+  (I.missing || []).forEach(x => { card += `<div class="alert">Manquant : ${E(x)}</div>`; });
+  (B.alerts || []).filter(a => a.new !== false).forEach(a => { card += `<div class="alert bad">${E(a.message)}</div>`; });
+  if (card) $("zonecard").innerHTML = `<div class="zone-card"><h3>Pour la parcelle</h3>${card}
+      ${o.zone_id ? `<p class="small" style="margin-top:8px"><a href="${DASHBOARD}/?focus=${o.zone_id}">Voir la parcelle sur le tableau de bord</a></p>` : ""}</div>`;
+}
+
+loadModules();
+loadZones();
+</script>
+</body>
+</html>
